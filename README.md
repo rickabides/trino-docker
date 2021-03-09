@@ -1,5 +1,5 @@
 # Trino Docker Image
-##Forked from trinodb/trino:core/docker
+Forked from trinodb/trino:core/docker
 This is for my own personal uses and testing. Don't use this as it may change for your needs.
 
 ```
