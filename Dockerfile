@@ -11,39 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM centos:centos8
+FROM azul/zulu-openjdk-centos:11
 
 ENV JAVA_HOME /usr/lib/jvm/zulu11
-
 RUN \
     set -xeu && \
-    # dependencies
-    dnf -y -q install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    dnf -y -q install zulu11 less python3 && \
-    alternatives --set python /usr/bin/python3 && \
-    dnf -q clean all && \
-    rm -rf /var/cache/dnf /tmp/* /var/tmp/* && \
-    # set up user
+    yum -y -q install less && \
+    yum -q clean all && \
+    rm -rf /var/cache/yum && \
     groupadd trino --gid 1000 && \
-    useradd trino --uid 1000 --gid 1000
-
-ENV TRINO_VERSION 353
-
-ENV TRINO_LOCATION="https://repo1.maven.org/maven2/io/trinosql/trino-server/${TRINO_VERSION}/trino-server-${TRINO_VERSION}.tar.gz"
-ENV CLIENT_LOCATION="https://repo1.maven.org/maven2/io/trinosql/trino-cli/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}-executable.jar"
-
-RUN \
-    set -xeu && \
-    # install client
-    curl -o /usr/bin/trino ${CLIENT_LOCATION} && \
-    chmod +x /usr/bin/trino && \
-    # install server
+    useradd trino --uid 1000 --gid 1000 && \
     mkdir -p /usr/lib/trino /data/trino && \
-    curl ${TRINO_LOCATION} | tar -C /usr/lib/trino -xz --strip 1 && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
-COPY --chown=trino:trino bin /usr/lib/trino/bin
-COPY --chown=trino:trino default /usr/lib/trino/default
+ARG TRINO_VERSION
+COPY trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
+COPY --chown=trino:trino trino-server-${TRINO_VERSION} /usr/lib/trino
+COPY --chown=trino:trino default/etc /etc/trino
 
 EXPOSE 8080
 USER trino:trino
